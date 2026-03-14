@@ -7,11 +7,15 @@ import "./globals.css";
 import {Providers} from "./providers";
 
 import {Navbar, NavbarBrand, NavbarContent, NavbarItem, Link, Button} from "@heroui/react";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 
 export default function RootLayout({children}: { children: React.ReactNode }) {
   return (
-    <html lang="en" className='dark'>
+    <html lang="en" className={cn("dark", "font-sans", geist.variable)}>
       <body>
         <Providers>
             <Navbar>
