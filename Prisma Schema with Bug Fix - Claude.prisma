@@ -1,0 +1,164 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum BloodGroup {
+  A_POS  // A+
+  A_NEG  // A−
+  B_POS  // B+
+  B_NEG  // B−
+  AB_POS // AB+
+  AB_NEG // AB−
+  O_POS  // O+
+  O_NEG  // O−
+}
+
+enum VisitType {
+  OPD
+  IPD
+}
+
+enum PatientStatus {
+  waiting
+  in_consultation
+  admitted
+  discharged
+}
+
+enum AppointmentType {
+  walk_in
+  scheduled
+}
+
+enum Priority {
+  normal
+  urgent
+  critical
+}
+
+enum BedType {
+  general
+  semi_private
+  private
+  icu
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String?
+  role      String    @default("doctor")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // A user (doctor/receptionist) registers patients
+  patients  Patient[]
+
+  @@map("users")
+}
+
+model Patient {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Personal Info ──────────────────────────────
+  name              String            // full name (firstName + lastName)
+  phone             String
+  dob               DateTime?
+  gender            Gender?
+  bloodGroup        BloodGroup?
+  emergencyContact  String?
+  address           String?
+
+  // ── Visit Info ─────────────────────────────────
+  visitType         VisitType         @default(OPD)
+  status            PatientStatus     @default(waiting)
+  department        String?
+  doctor            String?
+  appointmentType   AppointmentType   @default(walk_in)
+  priority          Priority          @default(normal)
+
+  // ── Clinical Info ──────────────────────────────
+  chiefComplaint    String?
+  symptoms          String?
+  allergies         String?
+  currentMedications String?
+
+  // ── IPD-only fields ────────────────────────────
+  admissionReason   String?
+  estimatedStay     Int?              // days
+  ward              String?
+  bedType           BedType?
+  attendantName     String?
+  attendantRelation String?
+
+  // ── Insurance ──────────────────────────────────
+  insuranceProvider String?
+  insurancePolicyNo String?
+
+  // ── Relations ──────────────────────────────────
+  registeredById    String?
+  registeredBy      User?             @relation(fields: [registeredById], references: [id])
+
+  visits            Visit[]
+  prescriptions     Prescription[]
+
+  @@index([phone])
+  @@index([visitType])
+  @@index([status])
+  @@index([registeredById])
+  @@map("patients")
+}
+
+// Track multiple visits for a returning patient
+model Visit {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+
+  patientId   String
+  patient     Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  visitType   VisitType
+  department  String?
+  doctor      String?
+  priority    Priority        @default(normal)
+  status      PatientStatus   @default(waiting)
+  notes       String?
+
+  @@index([patientId])
+  @@map("visits")
+}
+
+model Prescription {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctor      String
+  medicines   String   // JSON string: [{ name, dose, frequency, duration }]
+  notes       String?
+
+  @@index([patientId])
+  @@map("prescriptions")
+}

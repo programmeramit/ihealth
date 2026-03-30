@@ -1,20 +1,15 @@
-"use client"
-import {prisma} from "../lib/prisma"
-import { useEffect, useState } from "react"
+
+import { Button } from "@/components/ui/button"
 function page() {
 
-  useEffect(()=>{
-  
-    fetch('/api/users',{
-      method:'GET'
-    }).then((res)=>res.json()).then((data)=>console.log(data)).catch((error)=>console.log("Error while fetching the users"))
-
-
-  },[])
 
 
   return (
-    <div>page</div>
+    <div className="min-h-screen bg-amber-100">
+    <Button>Hello world</Button>
+    <div className="w-full ">page</div>
+    </div>
+    
   )
 }
 

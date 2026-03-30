@@ -1,7 +1,6 @@
 "use client"
 import { signIn } from 'next-auth/react'
-import { Button, Input } from '@heroui/react'
-import { useSession } from "next-auth/react"
+import { Button } from '@/components/ui/button'
 
 function page() {
 
