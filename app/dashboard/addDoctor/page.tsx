@@ -40,10 +40,25 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { LucideIcon } from "lucide-react"
+import { ReactNode } from "react"
+import { InputHTMLAttributes } from "react";
+
+
+
 
 // ── FieldGroup ────────────────────────────────────────────────────────────────
 
-function FieldGroup({ label, icon: Icon, required, children, className = "" }) {
+type FieldGroupProps = {
+  label: string
+  icon?: LucideIcon
+  required?: boolean
+  children: ReactNode
+  className?: string
+}
+
+
+function FieldGroup({ label, icon: Icon, required, children, className = "" }:FieldGroupProps) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <Label className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -58,7 +73,10 @@ function FieldGroup({ label, icon: Icon, required, children, className = "" }) {
 
 // ── InputWithIcon ─────────────────────────────────────────────────────────────
 
-function InputWithIcon({ icon: Icon, ...props }) {
+type InputwithIcon = {
+  icon: React.ElementType;
+} & InputHTMLAttributes<HTMLInputElement>;
+function InputWithIcon({ icon: Icon, ...props }:InputwithIcon) {
   return (
     <div className="relative">
       {Icon && (
@@ -71,7 +89,13 @@ function InputWithIcon({ icon: Icon, ...props }) {
 
 // ── SectionHeader ─────────────────────────────────────────────────────────────
 
-function SectionHeader({ icon: Icon, title, subtitle }) {
+type SectionHeader = {
+  icon:LucideIcon,
+  title?:string,
+  subtitle?:string
+}
+
+function SectionHeader({ icon: Icon, title, subtitle }:SectionHeader) {
   return (
     <div className="mb-5 flex items-center gap-3">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -91,10 +115,17 @@ function SectionHeader({ icon: Icon, title, subtitle }) {
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function WorkingDaysPicker({ value, onChange }) {
+type WorkingDays = {
+  value?:string,
+  onChange:any
+}
+
+
+
+function WorkingDaysPicker({ value, onChange }:WorkingDays) {
   const selected = value ? value.split(",").filter(Boolean) : [];
 
-  const toggle = (day) => {
+  const toggle = (day:string) => {
     const next = selected.includes(day)
       ? selected.filter((d) => d !== day)
       : [...selected, day];
@@ -126,7 +157,12 @@ function WorkingDaysPicker({ value, onChange }) {
 
 // ── ActiveToggle (native — no shadcn Switch needed) ───────────────────────────
 
-function ActiveToggle({ checked, onChange }) {
+type Activetoggle = {
+  checked:Boolean,
+  onChange:any
+}
+
+function ActiveToggle({ checked, onChange }:Activetoggle) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
       <div className="flex items-center gap-3">
@@ -142,7 +178,7 @@ function ActiveToggle({ checked, onChange }) {
       <button
         type="button"
         role="switch"
-        aria-checked={checked}
+        aria-checked={!!checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           checked ? "bg-primary" : "bg-input"
@@ -185,7 +221,7 @@ export default function AddDoctorPage() {
   const setVal = (key:any) => (val:any) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e:any) => {
     e.preventDefault();
     console.log("Doctor form payload:", {
       ...form,
