@@ -19,6 +19,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks:{
     async signIn({account,profile}){
       if(account?.provider === "google"){
+        console.log(account,profile)
         return profile?.email_verified && profile.email?.endsWith('@gmail.com')
       }
       return true

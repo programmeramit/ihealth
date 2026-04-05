@@ -7,19 +7,10 @@ datasource db {
   provider = "postgresql"
 }
 
-//all enums
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-
-
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?  @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -27,20 +18,19 @@ model User {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -50,8 +40,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -62,39 +51,103 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-
 model Patient {
-  id String @id  @default(uuid())
-  name String 
-  phone String
-  address String
-  dateOfBirth DateTime
-  Gender  Gender
- 
-  used UsedService[]
-
+  id           String             @id @default(uuid())
+  name         String
+  phone        String
+  address      String
+  dateOfBirth  DateTime
+  Gender       Gender
+  createdAt    DateTime           @default(now())
+  ipdId        String?
+  opdId        String?
+  appointments Appointment?
+  extra        MoreDetailPatient?
+  ipd          IPD?               @relation(fields: [ipdId], references: [id])
+  opd          OPD?               @relation(fields: [opdId], references: [id])
+  used         UsedService[]
 }
 
 model UsedService {
-  id Int @id @default(autoincrement())
-  name String 
-  price String
+  id        Int     @id @default(autoincrement())
+  name      String
+  price     String
   patientId String
-  patient Patient   @relation(fields: [patientId],references: [id])
+  patient   Patient @relation(fields: [patientId], references: [id])
 }
 
 model MoreDetailPatient {
-  id Int @id @default(autoincrement())
-  BloodGroup String?
+  id             Int     @id @default(autoincrement())
+  BloodGroup     String?
   ChiefComplaint String?
-  Symptons String?
-  Allergies String?
+  Symptons       String?
+  Allergies      String?
   CurentMedicine String?
-  Department String
-  Priority String?
-  Reason String?
-  Ward String?
-  BedType String?
-  
-  DoctorId String?
+  Department     String
+  Priority       String?
+  Reason         String?
+  Ward           String?
+  BedType        String?
+  DoctorId       String?
+  patientId      String  @unique
+  patient        Patient @relation(fields: [patientId], references: [id])
+}
+
+model Doctor {
+  id              String       @id @default(uuid())
+  phone           String
+  gender          String
+  dob             DateTime
+  specialization  String
+  qualification   String
+  experience      Int
+  licenseNumber   String       @unique
+  hospitalName    String?
+  consultationFee Float
+  availableFrom   String
+  availableTo     String
+  workingDays     String
+  bio             String?
+  profileImage    String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  appointments    Appointment?
+}
+
+model Appointment {
+  id        String            @default(uuid())
+  patientId String            @unique
+  doctorId  String            @unique
+  date      DateTime
+  duration  Int?
+  status    AppointmentStatus @default(PENDING)
+  reason    String?
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  doctor    Doctor            @relation(fields: [doctorId], references: [id])
+  patient   Patient           @relation(fields: [patientId], references: [id])
+}
+
+model OPD {
+  id       String    @id @default(uuid())
+  patients Patient[]
+}
+
+model IPD {
+  id       String    @id @default(uuid())
+  patients Patient[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
 }

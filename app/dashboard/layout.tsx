@@ -1,8 +1,8 @@
 import { Toaster } from "@/components/ui/sonner"
 import Providers from "@/provider/provider";
-import Navbar from "@/components/myComp/Navbar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/myComp/AppSidebar";
+import { AppSidebar } from './Sidebar'
+
 export default function RootLayout({
   children,
 }: {
@@ -10,7 +10,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="w-full h-screen bg-gray-100 text-black">
+      <body className=" bg-gray-100 text-black">
         <Providers>
           <SidebarProvider>
             <AppSidebar/>
