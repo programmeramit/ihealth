@@ -32,7 +32,9 @@ import { Badge } from "@/components/ui/badge";
 
 // ── FieldGroup: labelled input wrapper ───────────────────────────────────────
 
-function FieldGroup({ label, icon: Icon, required, children, className = "" }) {
+
+
+function FieldGroup({ label, icon: Icon, required, children, className = "" }:any) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <Label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -47,7 +49,7 @@ function FieldGroup({ label, icon: Icon, required, children, className = "" }) {
 
 // ── InputWithIcon: input with left-side icon ─────────────────────────────────
 
-function InputWithIcon({ icon: Icon, ...props }) {
+function InputWithIcon({ icon: Icon, ...props }:any) {
   return (
     <div className="relative">
       {Icon && (
@@ -60,7 +62,7 @@ function InputWithIcon({ icon: Icon, ...props }) {
 
 // ── Section header ────────────────────────────────────────────────────────────
 
-function SectionHeader({ icon: Icon, title, subtitle }) {
+function SectionHeader({ icon: Icon, title, subtitle }:any) {
   return (
     <div className="flex items-center gap-3 mb-5">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -96,7 +98,7 @@ export default function AddPatientPage() {
     type:''
   });
 
-  const set = (key) => (e) =>
+  const set = (key:any) => (e:any) =>
     setForm((prev) => ({ ...prev, [key]: e.target?.value ?? e }));
 
   return (
