@@ -51,6 +51,11 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum VisitType {
+  OPD
+  IPD
+}
+
 model Patient {
   id           String             @id @default(uuid())
   name         String
@@ -59,12 +64,9 @@ model Patient {
   dateOfBirth  DateTime
   Gender       Gender
   createdAt    DateTime           @default(now())
-  ipdId        String?
-  opdId        String?
-  appointments Appointment?
+  type  VisitType
+  appointments Appointment[]
   extra        MoreDetailPatient?
-  ipd          IPD?               @relation(fields: [ipdId], references: [id])
-  opd          OPD?               @relation(fields: [opdId], references: [id])
   used         UsedService[]
 }
 
@@ -95,6 +97,7 @@ model MoreDetailPatient {
 
 model Doctor {
   id              String       @id @default(uuid())
+  name            String
   phone           String
   gender          String
   dob             DateTime
@@ -112,13 +115,13 @@ model Doctor {
   isActive        Boolean      @default(true)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  appointments    Appointment?
+  appointments    Appointment[]
 }
 
 model Appointment {
-  id        String            @default(uuid())
-  patientId String            @unique
-  doctorId  String            @unique
+  id        String     @id       @default(uuid())
+  patientId String          
+  doctorId  String            
   date      DateTime
   duration  Int?
   status    AppointmentStatus @default(PENDING)
@@ -130,15 +133,7 @@ model Appointment {
   patient   Patient           @relation(fields: [patientId], references: [id])
 }
 
-model OPD {
-  id       String    @id @default(uuid())
-  patients Patient[]
-}
 
-model IPD {
-  id       String    @id @default(uuid())
-  patients Patient[]
-}
 
 enum Gender {
   MALE

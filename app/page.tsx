@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useSession } from "next-auth/react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -47,11 +48,15 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+
+  const {data} = useSession()
+  console.log(data)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -59,12 +64,7 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % features.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+
 
   const features = [
     {
@@ -382,7 +382,9 @@ export default function LandingPage() {
               variant="ghost"
               className="text-slate-300 hover:text-white hover:bg-slate-800"
             >
-              Sign In
+              {
+                data && <Link href={"/dashboard"}>Dashboard</Link> || <Link href={"/signIn"}>SignIn</Link>
+              }
             </Button>
             <Button className="cta-btn text-white border-0">
               Start Free Trial

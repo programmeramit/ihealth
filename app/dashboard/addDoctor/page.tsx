@@ -1,537 +1,364 @@
 "use client";
+import { toast } from "sonner"
 
 import React, { useState } from "react";
 import {
-  User2,
-  Phone,
-  Calendar,
-  Stethoscope,
-  GraduationCap,
-  BadgeCheck,
-  Building2,
-  IndianRupee,
-  Clock,
-  CalendarDays,
-  FileText,
-  ImagePlus,
-  ChevronRight,
-  Save,
-  X,
-  Power,
+  User2, Phone, Mail, MapPin, Calendar, ChevronRight,
+  Save, X, Stethoscope, GraduationCap, Clock, Building2,
+  Hash, FileText,
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { LucideIcon } from "lucide-react"
-import { ReactNode } from "react"
-import { InputHTMLAttributes } from "react";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-
-
-// ── FieldGroup ────────────────────────────────────────────────────────────────
-
-type FieldGroupProps = {
-  label: string
-  icon?: LucideIcon
-  required?: boolean
-  children: ReactNode
-  className?: string
+interface DoctorForm {
+  firstName: string;
+  lastName: string;
+  dob: string;
+  gender: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  // Professional
+  department: string;
+  specialization: string;
+  qualification: string;
+  registrationNumber: string;
+  experience: string;
+  consultationFee: string;
+  availableDays: string;
+  shiftStart: string;
+  shiftEnd: string;
+  bio: string;
 }
 
 
-function FieldGroup({ label, icon: Icon, required, children, className = "" }:FieldGroupProps) {
+
+
+
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function FieldGroup({
+  label, icon: Icon, required, children, className = "",
+}: {
+  label: string; icon?: React.ElementType; required?: boolean;
+  children: React.ReactNode; className?: string;
+}) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <Label className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-        {Icon && <Icon className="h-3 w-3" />}
+      <Label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        {Icon && <Icon className="h-3.5 w-3.5" />}
         {label}
-        {required && <span className="ml-0.5 text-destructive">*</span>}
+        {required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
       {children}
     </div>
   );
 }
 
-// ── InputWithIcon ─────────────────────────────────────────────────────────────
-
-type InputwithIcon = {
-  icon: React.ElementType;
-} & InputHTMLAttributes<HTMLInputElement>;
-function InputWithIcon({ icon: Icon, ...props }:InputwithIcon) {
+function InputWithIcon({ icon: Icon, ...props }: { icon?: React.ElementType; [key: string]: any }) {
   return (
     <div className="relative">
       {Icon && (
-        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       )}
       <Input className={Icon ? "pl-9" : ""} {...props} />
     </div>
   );
 }
 
-// ── SectionHeader ─────────────────────────────────────────────────────────────
-
-type SectionHeader = {
-  icon:LucideIcon,
-  title?:string,
-  subtitle?:string
-}
-
-function SectionHeader({ icon: Icon, title, subtitle }:SectionHeader) {
+function SectionHeader({
+  icon: Icon, title, subtitle,
+}: {
+  icon: React.ElementType; title: string; subtitle?: string;
+}) {
   return (
-    <div className="mb-5 flex items-center gap-3">
+    <div className="flex items-center gap-3 mb-5">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
         <Icon className="h-4 w-4 text-primary" />
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">{title}</p>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
   );
 }
 
-// ── WorkingDaysPicker ─────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DEPARTMENTS = [
+  "Cardiology", "General Medicine", "Neurology", "Orthopedics",
+  "Pediatrics", "Gynecology", "Oncology", "Emergency", "ENT", "Dermatology",
+  "Psychiatry", "Radiology", "Anesthesiology", "Pathology",
+];
 
-type WorkingDays = {
-  value?:string,
-  onChange:any
-}
+const QUALIFICATIONS = [
+  "MBBS", "MD", "MS", "DM", "MCh", "DNB", "FRCS", "MRCP", "PhD",
+];
 
-
-
-function WorkingDaysPicker({ value, onChange }:WorkingDays) {
-  const selected = value ? value.split(",").filter(Boolean) : [];
-
-  const toggle = (day:string) => {
-    const next = selected.includes(day)
-      ? selected.filter((d) => d !== day)
-      : [...selected, day];
-    onChange(next.join(","));
-  };
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {DAYS.map((day) => {
-        const active = selected.includes(day);
-        return (
-          <button
-            key={day}
-            type="button"
-            onClick={() => toggle(day)}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-all ${
-              active
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
-            }`}
-          >
-            {day}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── ActiveToggle (native — no shadcn Switch needed) ───────────────────────────
-
-type Activetoggle = {
-  checked:Boolean,
-  onChange:any
-}
-
-function ActiveToggle({ checked, onChange }:Activetoggle) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
-      <div className="flex items-center gap-3">
-        <Power className="h-4 w-4 text-muted-foreground" />
-        <div>
-          <p className="text-sm font-medium text-foreground">Account Active</p>
-          <p className="text-xs text-muted-foreground">
-            Inactive doctors won't appear in appointment booking
-          </p>
-        </div>
-      </div>
-      {/* Native toggle — no shadcn Switch import needed */}
-      <button
-        type="button"
-        role="switch"
-        aria-checked={!!checked}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          checked ? "bg-primary" : "bg-input"
-        }`}
-      >
-        <span
-          className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
+const AVAILABLE_DAYS_OPTIONS = [
+  "Mon–Fri", "Mon–Sat", "Weekdays only", "Weekends only", "All days",
+];
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AddDoctorPage() {
-  const [form, setForm] = useState({
-    phone: "",
-    gender: "",
-    dob: "",
-    specialization: "",
-    qualification: "",
-    experience: "",
-    licenseNumber: "",
-    hospitalName: "",
-    consultationFee: "",
-    availableFrom: "09:00",
-    availableTo: "17:00",
-    workingDays: "Mon,Tue,Wed,Thu,Fri",
-    bio: "",
-    profileImage: "",
-    isActive: true,
+  const [form, setForm] = useState<DoctorForm>({
+    firstName: "", lastName: "", dob: "", gender: "",
+    phone: "", email: "", address: "", city: "", state: "", pincode: "",
+    department: "", specialization: "", qualification: "",
+    registrationNumber: "", experience: "", consultationFee: "",
+    availableDays: "", shiftStart: "", shiftEnd: "", bio: "",
   });
 
-  const set = (key:any) => (e:any) =>
-    setForm((prev) => ({ ...prev, [key]: e.target?.value ?? e }));
+  const set = (key: keyof DoctorForm) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string) =>
+      setForm((prev) => ({ ...prev, [key]: typeof e === "string" ? e : e.target.value }));
 
-  const setVal = (key:any) => (val:any) =>
-    setForm((prev) => ({ ...prev, [key]: val }));
-
-  const handleSubmit = (e:any) => {
-    e.preventDefault();
-    console.log("Doctor form payload:", {
-      ...form,
-      experience: Number(form.experience),
+  const handleSubmit = async  () => {
+    const payload = {
+      name: `${form.firstName} ${form.lastName}`,
+      dob: form.dob,
+      gender: form.gender,
+      phone: form.phone,
+      email: form.email,
+      address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}`,
+      Department: form.department,
+      specialization: form.specialization,
+      qualification: form.qualification,
+      registrationNumber: form.registrationNumber,
+      experienceYears: Number(form.experience),
       consultationFee: Number(form.consultationFee),
-      dob: new Date(form.dob),
-    });
+      availableDays: form.availableDays,
+      shiftStart: form.shiftStart,
+      shiftEnd: form.shiftEnd,
+      bio: form.bio || null,
+    };
+    console.log("Submitting doctor:", payload);
+    // TODO: await createDoctor(payload)
+
+    const res = fetch('/api/doctor/addDoctor/',{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(payload)
+    },)
+
+    const data = (await res).json()
+
+    console.log(data)
+
   };
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8 w-full">
-
       {/* ── Page header ── */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
             <span>Dashboard</span>
             <ChevronRight className="h-3 w-3" />
             <span>Doctors</span>
             <ChevronRight className="h-3 w-3" />
-            <span className="font-medium text-foreground">Add Doctor</span>
+            <span className="text-foreground font-medium">Add Doctor</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             New Doctor Registration
           </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Fill in the doctor&apos;s profile. Fields marked{" "}
-            <span className="font-medium text-destructive">*</span> are required.
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Fill in the doctor's details below. Fields marked{" "}
+            <span className="text-destructive font-medium">*</span> are required.
           </p>
         </div>
-        <Badge variant="outline" className="hidden gap-1.5 text-xs md:flex">
+        <Badge variant="outline" className="hidden md:flex gap-1.5 text-xs">
           <Stethoscope className="h-3 w-3" />
           MediCare HMS
         </Badge>
       </div>
 
       {/* ── Form card ── */}
-      <form onSubmit={handleSubmit}>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold">
-              Doctor Information
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Complete all sections to onboard a new doctor into the system.
-            </CardDescription>
-          </CardHeader>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">Doctor Information</CardTitle>
+          <CardDescription className="text-xs">
+            Complete all sections to add a new doctor to the system.
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent className="space-y-8">
+        <CardContent className="space-y-8">
 
-            {/* ══ Section 1: Basic Info ══ */}
-            <div>
-              <SectionHeader
-                icon={User2}
-                title="Basic Information"
-                subtitle="Personal & contact details"
+          {/* ══ Section 1: Personal Info ══ */}
+          <div>
+            <SectionHeader icon={User2} title="Personal Details" subtitle="Basic identifying information" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FieldGroup label="First Name" icon={User2} required>
+                <InputWithIcon icon={User2} placeholder="e.g. Priya" value={form.firstName} onChange={set("firstName")} />
+              </FieldGroup>
+
+              <FieldGroup label="Last Name" required>
+                <Input placeholder="e.g. Sharma" value={form.lastName} onChange={set("lastName")} />
+              </FieldGroup>
+
+              <FieldGroup label="Date of Birth" icon={Calendar} required>
+                <InputWithIcon icon={Calendar} type="date" value={form.dob} onChange={set("dob")} />
+              </FieldGroup>
+
+              <FieldGroup label="Gender" required>
+                <Select onValueChange={set("gender")}>
+                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              <FieldGroup label="Phone Number" icon={Phone} required>
+                <InputWithIcon icon={Phone} type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")} />
+              </FieldGroup>
+
+              <FieldGroup label="Email Address" icon={Mail} required>
+                <InputWithIcon icon={Mail} type="email" placeholder="doctor@hospital.com" value={form.email} onChange={set("email")} />
+              </FieldGroup>
+
+              <FieldGroup label="Street Address" icon={MapPin} className="sm:col-span-2 lg:col-span-2">
+                <InputWithIcon icon={MapPin} placeholder="House / Flat no., Street, Locality" value={form.address} onChange={set("address")} />
+              </FieldGroup>
+
+              <FieldGroup label="City" required>
+                <Input placeholder="e.g. Bokaro" value={form.city} onChange={set("city")} />
+              </FieldGroup>
+
+              <div className="grid grid-cols-2 gap-3">
+                <FieldGroup label="State" required>
+                  <Input placeholder="e.g. Jharkhand" value={form.state} onChange={set("state")} />
+                </FieldGroup>
+                <FieldGroup label="PIN Code">
+                  <Input placeholder="827001" maxLength={6} value={form.pincode} onChange={set("pincode")} />
+                </FieldGroup>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* ══ Section 2: Professional Info ══ */}
+          <div>
+            <SectionHeader icon={GraduationCap} title="Professional Details" subtitle="Qualifications, department and specialization" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FieldGroup label="Department" icon={Building2} required>
+                <Select onValueChange={set("department")}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              <FieldGroup label="Specialization" icon={Stethoscope} required>
+                <InputWithIcon icon={Stethoscope} placeholder="e.g. Interventional Cardiology" value={form.specialization} onChange={set("specialization")} />
+              </FieldGroup>
+
+              <FieldGroup label="Highest Qualification" icon={GraduationCap} required>
+                <Select onValueChange={set("qualification")}>
+                  <SelectTrigger><SelectValue placeholder="Select qualification" /></SelectTrigger>
+                  <SelectContent>
+                    {QUALIFICATIONS.map((q) => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              <FieldGroup label="Registration Number" icon={Hash} required>
+                <InputWithIcon icon={Hash} placeholder="e.g. MCI-12345" value={form.registrationNumber} onChange={set("registrationNumber")} />
+              </FieldGroup>
+
+              <FieldGroup label="Experience (years)" icon={Clock}>
+                <InputWithIcon icon={Clock} type="number" min="0" max="60" placeholder="e.g. 10" value={form.experience} onChange={set("experience")} />
+              </FieldGroup>
+
+              <FieldGroup label="Consultation Fee (₹)">
+                <Input type="number" min="0" placeholder="e.g. 500" value={form.consultationFee} onChange={set("consultationFee")} />
+              </FieldGroup>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* ══ Section 3: Availability ══ */}
+          <div>
+            <SectionHeader icon={Clock} title="Availability & Schedule" subtitle="Working days and shift timings" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FieldGroup label="Available Days" icon={Calendar}>
+                <Select onValueChange={set("availableDays")}>
+                  <SelectTrigger><SelectValue placeholder="Select days" /></SelectTrigger>
+                  <SelectContent>
+                    {AVAILABLE_DAYS_OPTIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              <FieldGroup label="Shift Start" icon={Clock}>
+                <InputWithIcon icon={Clock} type="time" value={form.shiftStart} onChange={set("shiftStart")} />
+              </FieldGroup>
+
+              <FieldGroup label="Shift End" icon={Clock}>
+                <InputWithIcon icon={Clock} type="time" value={form.shiftEnd} onChange={set("shiftEnd")} />
+              </FieldGroup>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* ══ Section 4: Bio ══ */}
+          <div>
+            <SectionHeader icon={FileText} title="Additional Information" subtitle="Biography and remarks" />
+            <FieldGroup label="Doctor Bio / Notes" icon={FileText}>
+              <Textarea
+                placeholder="Brief professional biography, areas of expertise, or internal notes..."
+                rows={4}
+                value={form.bio}
+                onChange={set("bio")}
+                className="resize-none"
               />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <FieldGroup label="Phone Number" icon={Phone} required>
-                  <InputWithIcon
-                    icon={Phone}
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={form.phone}
-                    onChange={set("phone")}
-                  />
-                </FieldGroup>
+            </FieldGroup>
+          </div>
 
-                <FieldGroup label="Gender" required>
-                  <Select onValueChange={setVal("gender")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FieldGroup>
+          <Separator />
 
-                <FieldGroup label="Date of Birth" icon={Calendar} required>
-                  <InputWithIcon
-                    icon={Calendar}
-                    type="date"
-                    value={form.dob}
-                    onChange={set("dob")}
-                  />
-                </FieldGroup>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ══ Section 2: Professional Info ══ */}
-            <div>
-              <SectionHeader
-                icon={GraduationCap}
-                title="Professional Details"
-                subtitle="Specialization, qualification and credentials"
-              />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <FieldGroup label="Specialization" icon={Stethoscope} required>
-                  <Select onValueChange={setVal("specialization")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select specialization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[
-                        "Cardiology",
-                        "Neurology",
-                        "Orthopedics",
-                        "Dermatology",
-                        "Pediatrics",
-                        "Gynecology",
-                        "Oncology",
-                        "Psychiatry",
-                        "Radiology",
-                        "General Medicine",
-                      ].map((s) => (
-                        <SelectItem key={s} value={s.toLowerCase()}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FieldGroup>
-
-                <FieldGroup label="Qualification" icon={GraduationCap} required>
-                  <InputWithIcon
-                    icon={GraduationCap}
-                    placeholder="e.g. MBBS, MD, MS"
-                    value={form.qualification}
-                    onChange={set("qualification")}
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="Years of Experience" required>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="60"
-                    placeholder="e.g. 8"
-                    value={form.experience}
-                    onChange={set("experience")}
-                  />
-                </FieldGroup>
-
-                <FieldGroup
-                  label="License Number"
-                  icon={BadgeCheck}
-                  required
-                  className="sm:col-span-2 lg:col-span-1"
-                >
-                  <InputWithIcon
-                    icon={BadgeCheck}
-                    placeholder="e.g. MCI-2024-XXXXX"
-                    value={form.licenseNumber}
-                    onChange={set("licenseNumber")}
-                  />
-                </FieldGroup>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ══ Section 3: Work Info ══ */}
-            <div>
-              <SectionHeader
-                icon={Building2}
-                title="Work Information"
-                subtitle="Hospital affiliation and consultation fee"
-              />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FieldGroup label="Hospital / Clinic Name" icon={Building2}>
-                  <InputWithIcon
-                    icon={Building2}
-                    placeholder="e.g. Apollo Hospital, Bokaro"
-                    value={form.hospitalName}
-                    onChange={set("hospitalName")}
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="Consultation Fee (₹)" icon={IndianRupee} required>
-                  <InputWithIcon
-                    icon={IndianRupee}
-                    type="number"
-                    min="0"
-                    step="50"
-                    placeholder="e.g. 500"
-                    value={form.consultationFee}
-                    onChange={set("consultationFee")}
-                  />
-                </FieldGroup>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ══ Section 4: Availability ══ */}
-            <div>
-              <SectionHeader
-                icon={Clock}
-                title="Availability"
-                subtitle="Consultation hours and working days"
-              />
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <FieldGroup label="Available From" icon={Clock} required>
-                  <InputWithIcon
-                    icon={Clock}
-                    type="time"
-                    value={form.availableFrom}
-                    onChange={set("availableFrom")}
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="Available To" icon={Clock} required>
-                  <InputWithIcon
-                    icon={Clock}
-                    type="time"
-                    value={form.availableTo}
-                    onChange={set("availableTo")}
-                  />
-                </FieldGroup>
-              </div>
-
-              <div className="mt-4">
-                <FieldGroup label="Working Days" icon={CalendarDays} required>
-                  <WorkingDaysPicker
-                    value={form.workingDays}
-                    onChange={setVal("workingDays")}
-                  />
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Selected:{" "}
-                    <span className="font-medium text-foreground">
-                      {form.workingDays || "None"}
-                    </span>
-                  </p>
-                </FieldGroup>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ══ Section 5: Extra ══ */}
-            <div>
-              <SectionHeader
-                icon={FileText}
-                title="Additional Details"
-                subtitle="Bio, profile image and account status"
-              />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FieldGroup
-                  label="Profile Image URL"
-                  icon={ImagePlus}
-                  className="sm:col-span-2"
-                >
-                  <InputWithIcon
-                    icon={ImagePlus}
-                    type="url"
-                    placeholder="https://example.com/photo.jpg"
-                    value={form.profileImage}
-                    onChange={set("profileImage")}
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="Bio / About" className="sm:col-span-2">
-                  <Textarea
-                    placeholder="Brief professional summary — qualifications, expertise, achievements..."
-                    rows={4}
-                    value={form.bio}
-                    onChange={set("bio")}
-                    className="resize-none"
-                  />
-                </FieldGroup>
-
-                <div className="sm:col-span-2">
-                  <ActiveToggle
-                    checked={form.isActive}
-                    onChange={setVal("isActive")}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* ══ Actions ══ */}
-            <div className="flex flex-col-reverse items-center justify-end gap-3 pt-1 sm:flex-row">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full gap-2 text-muted-foreground sm:w-auto"
-              >
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
-              <Button type="button" variant="outline" className="w-full sm:w-auto">
-                Save as Draft
-              </Button>
-              <Button type="submit" className="w-full gap-2 sm:w-auto">
-                <Save className="h-4 w-4" />
-                Register Doctor
-              </Button>
-            </div>
-
-          </CardContent>
-        </Card>
-      </form>
+          {/* ══ Action buttons ══ */}
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-1">
+            <Button variant="ghost" className="w-full sm:w-auto gap-2 text-muted-foreground">
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+            <Button variant="outline" className="w-full sm:w-auto">
+              Save as Draft
+            </Button>
+            <Button className="w-full sm:w-auto gap-2" onClick={handleSubmit}>
+              <Save className="h-4 w-4" />
+              Add Doctor
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

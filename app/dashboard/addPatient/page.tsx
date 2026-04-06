@@ -1,18 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import {
-  User2,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Droplets,
-  FileText,
-  Stethoscope,
-  ChevronRight,
-  Save,
-  X,
+  User2, Phone, Mail, MapPin, Calendar, Droplets,
+  FileText, Stethoscope, ChevronRight, Save, X,
+  AlertTriangle, Pill, Building2, BedDouble, ClipboardList,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,20 +13,50 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-// ── FieldGroup: labelled input wrapper ───────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
+interface PatientForm {
+  // Personal
+  firstName: string;
+  lastName: string;
+  dob: string;
+  gender: string;
+  bloodGroup: string;
+  type: string; // IPD | OPD
+  // Contact
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  // Clinical — Prisma schema fields
+  ChiefComplaint: string;
+  Symptons: string;
+  Allergies: string;
+  CurentMedicine: string;
+  Department: string;
+  Priority: string;
+  Reason: string;
+  Ward: string;
+  BedType: string;
+  DoctorId: string;
+}
 
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function FieldGroup({ label, icon: Icon, required, children, className = "" }:any) {
+function FieldGroup({
+  label, icon: Icon, required, children, className = "",
+}: {
+  label: string; icon?: React.ElementType; required?: boolean;
+  children: React.ReactNode; className?: string;
+}) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <Label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -47,9 +69,7 @@ function FieldGroup({ label, icon: Icon, required, children, className = "" }:an
   );
 }
 
-// ── InputWithIcon: input with left-side icon ─────────────────────────────────
-
-function InputWithIcon({ icon: Icon, ...props }:any) {
+function InputWithIcon({ icon: Icon, ...props }: { icon?: React.ElementType; [key: string]: any }) {
   return (
     <div className="relative">
       {Icon && (
@@ -60,9 +80,11 @@ function InputWithIcon({ icon: Icon, ...props }:any) {
   );
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
-
-function SectionHeader({ icon: Icon, title, subtitle }:any) {
+function SectionHeader({
+  icon: Icon, title, subtitle,
+}: {
+  icon: React.ElementType; title: string; subtitle?: string;
+}) {
   return (
     <div className="flex items-center gap-3 mb-5">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -76,30 +98,99 @@ function SectionHeader({ icon: Icon, title, subtitle }:any) {
   );
 }
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const BLOOD_GROUPS = ["A+", "A−", "B+", "B−", "AB+", "AB−", "O+", "O−"];
+
+const DEPARTMENTS = [
+  "Cardiology", "General Medicine", "Neurology", "Orthopedics",
+  "Pediatrics", "Gynecology", "Oncology", "Emergency", "ENT", "Dermatology",
+];
+
+const PRIORITIES = ["Low", "Medium", "High", "Critical"];
+
+const BED_TYPES = ["General", "Semi-Private", "Private", "ICU", "HDU", "NICU"];
+
+const WARDS = ["Ward A", "Ward B", "Ward C", "ICU", "HDU", "Maternity", "Pediatric"];
+
+// ── Sample doctors (replace with API fetch) ───────────────────────────────────
+
+const DOCTORS = [
+  { id: "dr-001", name: "Dr. Priya Sharma", department: "Cardiology" },
+  { id: "dr-002", name: "Dr. Amit Patel", department: "General Medicine" },
+  { id: "dr-003", name: "Dr. Sunita Mehta", department: "Neurology" },
+  { id: "dr-004", name: "Dr. Rajesh Kumar", department: "Orthopedics" },
+];
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AddPatientPage() {
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    dob: "",
-    gender: "",
-    bloodGroup: "",
-    phone: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    diagnosis: "",
-    allergies: "",
-    notes: "",
-    assignedDoctor: "",
-    type:''
-  });
 
-  const set = (key:any) => (e:any) =>
-    setForm((prev) => ({ ...prev, [key]: e.target?.value ?? e }));
+
+  const [form, setForm] = useState<PatientForm>({
+    firstName: "", lastName: "", dob: "", gender: "", bloodGroup: "", type: "",
+    phone: "", email: "", address: "", city: "", state: "", pincode: "",
+    ChiefComplaint: "", Symptons: "", Allergies: "", CurentMedicine: "",
+    Department: "", Priority: "", Reason: "", Ward: "", BedType: "", DoctorId: "",
+  });
+  const [doctors,setdoctor] = useState<any[ ]>([])
+
+    useEffect(()=>{
+        
+        fetch('/api/doctor/addDoctor/',{
+            method:'GET'
+        }).then((res)=>res.json()).then((res)=>
+            {setdoctor(res.doctors)}).catch((err)=>console.log(err))
+
+
+
+    },[])
+
+
+
+  const set = (key: keyof PatientForm) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string) =>
+      setForm((prev) => ({ ...prev, [key]: typeof e === "string" ? e : e.target.value }));
+
+  const handleSubmit = () => {
+    // Map form to Prisma-compatible payload
+    const payload = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      dob: form.dob,
+      gender: form.gender,
+      bloodGroup: form.bloodGroup,
+      type: form.type,
+      phone: form.phone,
+      email: form.email,
+      address: `${form.address}, ${form.city}, ${form.state} - ${form.pincode}`,
+      ChiefComplaint: form.ChiefComplaint || null,
+      Symptons: form.Symptons || null,
+      Allergies: form.Allergies || null,
+      CurentMedicine: form.CurentMedicine || null,
+      Department: form.Department,
+      Priority: form.Priority || null,
+      Reason: form.Reason || null,
+      Ward: form.type === "IPD" ? (form.Ward || null) : null,
+      BedType: form.type === "IPD" ? (form.BedType || null) : null,
+      DoctorId: form.DoctorId || null,
+    };
+    console.log("Submitting patient:", payload);
+    // TODO: await createPatient(payload)
+
+     fetch('/api/patient/',{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(payload)
+    },).then(()=>console.log("Succesfully added"))
+
+
+
+  };
+
+  const isIPD = form.type === "IPD";
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8 w-full">
@@ -140,43 +231,23 @@ export default function AddPatientPage() {
 
           {/* ══ Section 1: Personal Info ══ */}
           <div>
-            <SectionHeader
-              icon={User2}
-              title="Personal Details"
-              subtitle="Basic identifying information"
-            />
+            <SectionHeader icon={User2} title="Personal Details" subtitle="Basic identifying information" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <FieldGroup label="First Name" icon={User2} required>
-                <InputWithIcon
-                  icon={User2}
-                  placeholder="e.g. Rahul"
-                  value={form.firstName}
-                  onChange={set("firstName")}
-                />
+                <InputWithIcon icon={User2} placeholder="e.g. Rahul" value={form.firstName} onChange={set("firstName")} />
               </FieldGroup>
 
               <FieldGroup label="Last Name" required>
-                <Input
-                  placeholder="e.g. Sharma"
-                  value={form.lastName}
-                  onChange={set("lastName")}
-                />
+                <Input placeholder="e.g. Sharma" value={form.lastName} onChange={set("lastName")} />
               </FieldGroup>
 
               <FieldGroup label="Date of Birth" icon={Calendar} required>
-                <InputWithIcon
-                  icon={Calendar}
-                  type="date"
-                  value={form.dob}
-                  onChange={set("dob")}
-                />
+                <InputWithIcon icon={Calendar} type="date" value={form.dob} onChange={set("dob")} />
               </FieldGroup>
 
               <FieldGroup label="Gender" required>
                 <Select onValueChange={set("gender")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
@@ -185,49 +256,79 @@ export default function AddPatientPage() {
                   </SelectContent>
                 </Select>
               </FieldGroup>
-              <FieldGroup label="Type" required>
+
+              <FieldGroup label="Patient Type" required>
                 <Select onValueChange={set("type")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select the type" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="IPD / OPD" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="IPD">IPD</SelectItem>
-                    <SelectItem value="OPD">OPD</SelectItem>
-                   
+                    <SelectItem value="IPD">IPD — In-Patient</SelectItem>
+                    <SelectItem value="OPD">OPD — Out-Patient</SelectItem>
                   </SelectContent>
                 </Select>
               </FieldGroup>
 
               <FieldGroup label="Blood Group" icon={Droplets}>
                 <Select onValueChange={set("bloodGroup")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select blood group" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
                   <SelectContent>
-                    {["A+", "A−", "B+", "B−", "AB+", "AB−", "O+", "O−"].map(
-                      (g) => (
-                        <SelectItem key={g} value={g}>
-                          {g}
-                        </SelectItem>
-                      )
-                    )}
+                    {BLOOD_GROUPS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              <FieldGroup label="Department" icon={Building2} required>
+                <Select onValueChange={set("Department")}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </FieldGroup>
 
               <FieldGroup label="Assigned Doctor" icon={Stethoscope}>
-                <Select onValueChange={set("assignedDoctor")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select doctor" />
-                  </SelectTrigger>
+                <Select onValueChange={set("DoctorId")}>
+                  <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dr-smith">Dr. Smith — Cardiology</SelectItem>
-                    <SelectItem value="dr-patel">Dr. Patel — General</SelectItem>
-                    <SelectItem value="dr-mehta">Dr. Mehta — Neurology</SelectItem>
-                    <SelectItem value="dr-jones">Dr. Jones — Orthopedics</SelectItem>
+                    {doctors.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name} — {d.specialization}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </FieldGroup>
+
+              <FieldGroup label="Priority" icon={AlertTriangle}>
+                <Select onValueChange={set("Priority")}>
+                  <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
+                  <SelectContent>
+                    {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FieldGroup>
+
+              {/* IPD-only fields */}
+              {isIPD && (
+                <>
+                  <FieldGroup label="Ward" icon={BedDouble}>
+                    <Select onValueChange={set("Ward")}>
+                      <SelectTrigger><SelectValue placeholder="Select ward" /></SelectTrigger>
+                      <SelectContent>
+                        {WARDS.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FieldGroup>
+
+                  <FieldGroup label="Bed Type" icon={BedDouble}>
+                    <Select onValueChange={set("BedType")}>
+                      <SelectTrigger><SelectValue placeholder="Select bed type" /></SelectTrigger>
+                      <SelectContent>
+                        {BED_TYPES.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FieldGroup>
+                </>
+              )}
             </div>
           </div>
 
@@ -235,64 +336,30 @@ export default function AddPatientPage() {
 
           {/* ══ Section 2: Contact Info ══ */}
           <div>
-            <SectionHeader
-              icon={Phone}
-              title="Contact Information"
-              subtitle="Phone, email and address details"
-            />
+            <SectionHeader icon={Phone} title="Contact Information" subtitle="Phone, email and address details" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FieldGroup label="Phone Number" icon={Phone} required>
-                <InputWithIcon
-                  icon={Phone}
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  value={form.phone}
-                  onChange={set("phone")}
-                />
+                <InputWithIcon icon={Phone} type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")} />
               </FieldGroup>
 
               <FieldGroup label="Email Address" icon={Mail}>
-                <InputWithIcon
-                  icon={Mail}
-                  type="email"
-                  placeholder="rahul@example.com"
-                  value={form.email}
-                  onChange={set("email")}
-                />
+                <InputWithIcon icon={Mail} type="email" placeholder="rahul@example.com" value={form.email} onChange={set("email")} />
               </FieldGroup>
 
               <FieldGroup label="Street Address" icon={MapPin} className="sm:col-span-2">
-                <InputWithIcon
-                  icon={MapPin}
-                  placeholder="House / Flat no., Street, Locality"
-                  value={form.address}
-                  onChange={set("address")}
-                />
+                <InputWithIcon icon={MapPin} placeholder="House / Flat no., Street, Locality" value={form.address} onChange={set("address")} />
               </FieldGroup>
 
               <FieldGroup label="City" required>
-                <Input
-                  placeholder="e.g. Bokaro"
-                  value={form.city}
-                  onChange={set("city")}
-                />
+                <Input placeholder="e.g. Bokaro" value={form.city} onChange={set("city")} />
               </FieldGroup>
 
               <div className="grid grid-cols-2 gap-3">
                 <FieldGroup label="State" required>
-                  <Input
-                    placeholder="e.g. Jharkhand"
-                    value={form.state}
-                    onChange={set("state")}
-                  />
+                  <Input placeholder="e.g. Jharkhand" value={form.state} onChange={set("state")} />
                 </FieldGroup>
                 <FieldGroup label="PIN Code">
-                  <Input
-                    placeholder="827001"
-                    maxLength={6}
-                    value={form.pincode}
-                    onChange={set("pincode")}
-                  />
+                  <Input placeholder="827001" maxLength={6} value={form.pincode} onChange={set("pincode")} />
                 </FieldGroup>
               </div>
             </div>
@@ -300,37 +367,52 @@ export default function AddPatientPage() {
 
           <Separator />
 
-          {/* ══ Section 3: Medical Info ══ */}
+          {/* ══ Section 3: Clinical Info (Prisma schema fields) ══ */}
           <div>
-            <SectionHeader
-              icon={FileText}
-              title="Medical Details"
-              subtitle="Diagnosis, allergies and clinical notes"
-            />
+            <SectionHeader icon={FileText} title="Clinical Information" subtitle="Chief complaint, symptoms, medications and notes" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FieldGroup label="Primary Diagnosis" icon={Stethoscope}>
+              <FieldGroup label="Chief Complaint" icon={ClipboardList}>
                 <InputWithIcon
-                  icon={Stethoscope}
-                  placeholder="e.g. Hypertension"
-                  value={form.diagnosis}
-                  onChange={set("diagnosis")}
+                  icon={ClipboardList}
+                  placeholder="e.g. Chest pain since 2 days"
+                  value={form.ChiefComplaint}
+                  onChange={set("ChiefComplaint")}
                 />
               </FieldGroup>
 
-              <FieldGroup label="Known Allergies">
-                <Input
+              <FieldGroup label="Known Allergies" icon={AlertTriangle}>
+                <InputWithIcon
+                  icon={AlertTriangle}
                   placeholder="e.g. Penicillin, Sulfa drugs"
-                  value={form.allergies}
-                  onChange={set("allergies")}
+                  value={form.Allergies}
+                  onChange={set("Allergies")}
                 />
               </FieldGroup>
 
-              <FieldGroup label="Clinical Notes" className="sm:col-span-2">
+              <FieldGroup label="Current Medications" icon={Pill}>
+                <InputWithIcon
+                  icon={Pill}
+                  placeholder="e.g. Metformin 500mg, Amlodipine 5mg"
+                  value={form.CurentMedicine}
+                  onChange={set("CurentMedicine")}
+                />
+              </FieldGroup>
+
+              <FieldGroup label="Reason for Visit" icon={FileText}>
+                <InputWithIcon
+                  icon={FileText}
+                  placeholder="e.g. Routine check-up / Emergency"
+                  value={form.Reason}
+                  onChange={set("Reason")}
+                />
+              </FieldGroup>
+
+              <FieldGroup label="Symptoms" className="sm:col-span-2">
                 <Textarea
-                  placeholder="Additional clinical observations, history, or remarks..."
-                  rows={4}
-                  value={form.notes}
-                  onChange={set("notes")}
+                  placeholder="Describe symptoms in detail — duration, severity, associated factors..."
+                  rows={3}
+                  value={form.Symptons}
+                  onChange={set("Symptons")}
                   className="resize-none"
                 />
               </FieldGroup>
@@ -348,7 +430,7 @@ export default function AddPatientPage() {
             <Button variant="outline" className="w-full sm:w-auto">
               Save as Draft
             </Button>
-            <Button className="w-full sm:w-auto gap-2">
+            <Button className="w-full sm:w-auto gap-2" onClick={handleSubmit}>
               <Save className="h-4 w-4" />
               Register Patient
             </Button>

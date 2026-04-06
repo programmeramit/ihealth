@@ -1,5 +1,7 @@
 "use client"
 import { useState } from "react";
+
+import Link from "next/link";
 import {
   LayoutDashboard,
   User,
@@ -43,6 +45,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { title } from "process";
 
 // ─── Nav Data ────────────────────────────────────────────────────────────────
 
@@ -50,13 +53,13 @@ const navItems = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "#dashboard",
+    href: "",
     key: "dashboard",
   },
   {
     title: "Profile",
     icon: User,
-    href: "#profile",
+    href: "profile",
     key: "profile",
   },
   {
@@ -67,7 +70,7 @@ const navItems = [
       {
         title: "Add Patient",
         icon: UserPlus,
-        href: "#add-patient",
+        href: "addPatient",
         key: "add-patient",
       },
       {
@@ -78,15 +81,34 @@ const navItems = [
       },
     ],
   },
+  {
+    title: 'Doctor',
+    icon: Stethoscope,
+    href: 'doctor',
+    key: 'doctors',
+    children: [
+      {
+        title: 'Add Doctor',
+        icon: UserPlus,
+        href: 'addDoctor',
+        key: 'add-doctor'
+      }
+    ]
+  },
+
 ];
 
 // ─── Inner Sidebar ────────────────────────────────────────────────────────────
 
 export function AppSidebar() {
-  const [activeKey, setActiveKey] = useState("dashboard");
-  const [patientsOpen, setPatientsOpen] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({});
 
-  const handleNav = (key:any) => setActiveKey(key);
+  const handleNav = (key: string) => setActiveKey(key);
+
+  const toggleOpen = (key: string) => {
+    setOpenKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar">
@@ -116,15 +138,16 @@ export function AppSidebar() {
             <SidebarMenu className="gap-1">
               {navItems.map((item) => {
                 if (item.children) {
-                  const childActive =
-                    activeKey === "add-patient" ||
-                    activeKey === "view-patients";
+                  const isOpen = !!openKeys[item.key];
+                  const childActive = item.children.some(
+                    (child) => activeKey === child.key
+                  );
 
                   return (
                     <Collapsible
                       key={item.key}
-                      open={patientsOpen}
-                      onOpenChange={setPatientsOpen}
+                      open={isOpen}
+                      onOpenChange={() => toggleOpen(item.key)}
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
@@ -133,15 +156,14 @@ export function AppSidebar() {
                               "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all",
                               "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                               childActive &&
-                                "bg-sidebar-accent text-sidebar-accent-foreground",
-                                "disabled"
+                                "bg-sidebar-accent text-sidebar-accent-foreground"
                             )}
                           >
                             <span className="flex items-center gap-3">
                               <item.icon className="h-4 w-4 shrink-0 opacity-70 group-hover:opacity-100" />
                               {item.title}
                             </span>
-                            {patientsOpen ? (
+                            {isOpen ? (
                               <ChevronDown className="h-3.5 w-3.5 opacity-50 transition-transform" />
                             ) : (
                               <ChevronRight className="h-3.5 w-3.5 opacity-50 transition-transform" />
@@ -164,10 +186,10 @@ export function AppSidebar() {
                                       "bg-primary/10 font-medium text-primary"
                                   )}
                                 >
-                                  <a href={child.href}>
+                                  <Link href={child.href}>
                                     <child.icon className="h-3.5 w-3.5 shrink-0" />
                                     {child.title}
-                                  </a>
+                                  </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                             ))}

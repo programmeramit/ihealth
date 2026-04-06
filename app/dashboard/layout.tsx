@@ -11,7 +11,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className=" bg-gray-100 text-black">
-        <Providers>
           <SidebarProvider>
             <AppSidebar/>
   
@@ -19,7 +18,6 @@ export default function RootLayout({
                 <Toaster />
                 </SidebarProvider>
 
-                </Providers>
 
       </body>
     </html>

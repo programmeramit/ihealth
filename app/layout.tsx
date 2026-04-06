@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { Inter, Merriweather, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import Providers from "@/provider/provider";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -32,7 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
-        {children}
+        <Providers>
+                  {children}
+
+        </Providers>
       </body>
     </html>
   );
