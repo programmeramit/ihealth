@@ -53,7 +53,7 @@ const navItems = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
-    href: "",
+    href: "/dashboard",
     key: "dashboard",
   },
   {
@@ -70,7 +70,7 @@ const navItems = [
       {
         title: "Add Patient",
         icon: UserPlus,
-        href: "addPatient",
+        href: "/dashboard/addPatient",
         key: "add-patient",
       },
       {
@@ -90,7 +90,7 @@ const navItems = [
       {
         title: 'Add Doctor',
         icon: UserPlus,
-        href: 'addDoctor',
+        href: '/dashboard/addDoctor',
         key: 'add-doctor'
       }
     ]

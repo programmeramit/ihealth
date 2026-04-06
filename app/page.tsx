@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -383,7 +385,7 @@ export default function LandingPage() {
               className="text-slate-300 hover:text-white hover:bg-slate-800"
             >
               {
-                data && <Link href={"/dashboard"}>Dashboard</Link> || <Link href={"/signIn"}>SignIn</Link>
+                data && <Link href={"/dashboard"}>Dashboard</Link> || <Button onClick={async()=>signIn('google')}>SignIn</Button>
               }
             </Button>
             <Button className="cta-btn text-white border-0">

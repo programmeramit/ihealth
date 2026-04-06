@@ -5,6 +5,8 @@ import { Inter, Merriweather, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/provider/provider";
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -35,6 +37,8 @@ export default function RootLayout({
       <body className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}>
         <Providers>
                   {children}
+                        <SpeedInsights />
+
 
         </Providers>
       </body>
