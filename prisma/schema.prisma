@@ -64,10 +64,12 @@ model Patient {
   dateOfBirth  DateTime
   Gender       Gender
   createdAt    DateTime           @default(now())
-  type  VisitType
+  type         VisitType
   appointments Appointment[]
   extra        MoreDetailPatient?
   used         UsedService[]
+  doctors      PatientDoctor[]
+
 }
 
 model UsedService {
@@ -79,7 +81,7 @@ model UsedService {
 }
 
 model MoreDetailPatient {
-  id             Int     @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   BloodGroup     String?
   ChiefComplaint String?
   Symptons       String?
@@ -91,37 +93,39 @@ model MoreDetailPatient {
   Ward           String?
   BedType        String?
   DoctorId       String?
-  patientId      String  @unique
-  patient        Patient @relation(fields: [patientId], references: [id])
+
+  patientId      String   @unique
+  patient        Patient  @relation(fields: [patientId], references: [id])
 }
 
 model Doctor {
-  id              String       @id @default(uuid())
-  name            String
-  phone           String
-  gender          String
-  dob             DateTime
-  specialization  String
-  qualification   String
-  experience      Int
-  licenseNumber   String       @unique
-  hospitalName    String?
-  consultationFee Float
-  availableFrom   String
-  availableTo     String
-  workingDays     String
-  bio             String?
-  profileImage    String?
-  isActive        Boolean      @default(true)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  appointments    Appointment[]
+  id                  String             @id @default(uuid())
+  name                String
+  phone               String
+  gender              String
+  dob                 DateTime
+  specialization      String
+  qualification       String
+  experience          Int
+  licenseNumber       String             @unique
+  hospitalName        String?
+  consultationFee     Float
+  availableFrom       String
+  availableTo         String
+  workingDays         String
+  bio                 String?
+  profileImage        String?
+  isActive            Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  appointments        Appointment[]
+  patients            PatientDoctor[]
 }
 
 model Appointment {
-  id        String     @id       @default(uuid())
-  patientId String          
-  doctorId  String            
+  id        String            @id @default(uuid())
+  patientId String
+  doctorId  String
   date      DateTime
   duration  Int?
   status    AppointmentStatus @default(PENDING)
@@ -133,8 +137,6 @@ model Appointment {
   patient   Patient           @relation(fields: [patientId], references: [id])
 }
 
-
-
 enum Gender {
   MALE
   FEMALE
@@ -145,4 +147,16 @@ enum AppointmentStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+}
+
+model PatientDoctor {
+  id        Int     @id @default(autoincrement())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId String
+
+  doctor    Doctor  @relation(fields: [doctorId], references: [id])
+  doctorId  String
+
+  @@unique([patientId, doctorId])
 }
